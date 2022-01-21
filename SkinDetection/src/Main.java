@@ -1,11 +1,12 @@
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Scanner;
+import java.io.*;
+
+/**
+ * The Probability file is bigger than 100 MB.
+ * So I can not upload it. but after once you don't need 69'th line anymore
+ * */
 
 public class Main {
     public static int[][][] colourArrayNonSkin = new int[256][256][256];
@@ -17,75 +18,66 @@ public class Main {
 
     public static void readImage() throws IOException {
 
-        File[] Maskfolder = new File("Mask").listFiles();
+        File[] MaskFolder = new File("Mask").listFiles();
         File[] RealFolder = new File("Real").listFiles();
 
-        for(int imageindex =0 ; imageindex < 500; imageindex++){
-            BufferedImage imgMask = ImageIO.read(Maskfolder[imageindex]);
-            BufferedImage img = ImageIO.read(RealFolder[imageindex]);
+        for(int imageIndex =0 ; imageIndex < 500; imageIndex++){
+            BufferedImage imgMask = ImageIO.read(MaskFolder[imageIndex]);
+            BufferedImage img = ImageIO.read(RealFolder[imageIndex]);
 
             for(int i=0; i< img.getHeight(); i++){
                 for(int j=0; j< img.getWidth(); j++){
                     Color c = new Color(img.getRGB(j, i));
                     Color cM = new Color(imgMask.getRGB(j, i));
-                    if(cM.getRed()<200 && cM.getBlue()<200 && cM.getGreen()<200){
+                    if(cM.getRed()<220 && cM.getBlue()<220 && cM.getGreen()<220){
                         colourArraySkin[c.getRed()][c.getGreen()][c.getBlue()]++;
                         skin++;
-                        //probabilitySkin[c.getRed()][c.getGreen()][c.getBlue()] =(double) (colourArraySkin[c.getRed()][c.getGreen()][c.getBlue()]/skin);
                     }
                     else {
                         colourArrayNonSkin[c.getRed()][c.getGreen()][c.getBlue()]++;
                         nonSkin++;
-                        //probabilityNonSkin[c.getRed()][c.getGreen()][c.getBlue()] =(double) (colourArrayNonSkin[c.getRed()][c.getGreen()][c.getBlue()]/nonSkin);
                     }
                 }
             }
-            System.out.println(imageindex + "reading done");
+            System.out.println(imageIndex + "reading done");
         }
 
         System.out.println("reading done");
 
-        FileWriter skinProbFile = new FileWriter("skin.txt",true);
-        FileWriter nonSkinProbFile = new FileWriter("nonskin.txt");
         for(int i=0; i<256; i++){
             for(int j=0; j<256; j++){
                 for(int k=0; k<256; k++){
                     probabilitySkin[i][j][k] = colourArraySkin[i][j][k]/skin;
                     probabilityNonSkin[i][j][k] = colourArrayNonSkin[i][j][k]/nonSkin;
-                    skinProbFile.write(probabilitySkin[i][j][k]+"\n");
-                    nonSkinProbFile.write(probabilityNonSkin[i][j][k]+"\n");
+
                     System.out.println(i + " " + j + " " +k);
                 }
             }
         }
-        skinProbFile.close();
-        nonSkinProbFile.close();
+
+        Probability prob = new Probability(probabilitySkin,probabilityNonSkin);
+        System.out.println("obj done");
+        FileOutputStream probability = new FileOutputStream("probability.txt");
+        ObjectOutputStream obj = new ObjectOutputStream(probability);
+        obj.writeObject(prob);
+        System.out.println("writing done");
+        probability.close();
+        obj.close();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         //readImage();
-        //already trained with 500 images
-        
-        Scanner scS = new Scanner(new File("skin.txt"));
-        Scanner scNS = new Scanner(new File("nonskin.txt"));
+        //comment this line after once
 
-        for(int i=0; i<16777216; i++){
-            int x = i;
-            int c = x%256;
-            x/=256;
-            int b = x%256;
-            x/=256;
-            int a = x;
+        System.out.println("reading started");
+        ObjectInputStream input = new ObjectInputStream(new FileInputStream("probability.txt"));
+        Probability inProb = (Probability) input.readObject();
+        System.out.println("reading done");
+        probabilitySkin = inProb.probSkin;
+        probabilityNonSkin = inProb.probNonSkin;
+        System.out.println("assigning done");
 
-            double ss = scS.nextDouble();
-            double sns = scNS.nextDouble();
-            probabilityNonSkin[a][b][c] = sns;
-            probabilitySkin[a][b][c] = ss;
-
-            //System.out.println(a+" "+b+" "+c);
-        }
-
-        BufferedImage SampleImage = ImageIO.read(new File("in4.jpg"));
+        BufferedImage SampleImage = ImageIO.read(new File("loki.jpg"));
         BufferedImage outputImage = new BufferedImage(SampleImage.getWidth(), SampleImage.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
 
         int width = SampleImage.getWidth();
@@ -99,19 +91,19 @@ public class Main {
             int green = (imageInPixels[i] & 0x0000FF00) >> 8;
             int blue = (imageInPixels[i] & 0x000000FF);
 
-            // not face=black
-            if ( probabilitySkin[red][green][blue] / probabilityNonSkin[red][green][blue] > 0.35  ){
-                red = 255;
+            // face = white
+            if ( probabilitySkin[red][green][blue]   > .15 * probabilityNonSkin[red][green][blue] ){
+                red = 250;
                 green = 250;
                 blue = 250;
 
-            } else {
+            }
+            else {
                 red =10 ;
                 green = 10;
                 blue =10;
             }
 
-            // At last, store in output array:
             imageOutPixels[i] = (alpha & 0xFF) << 24 | (red & 0xFF) << 16 | (green & 0xFF) << 8 | (blue & 0xFF);
 
         }
