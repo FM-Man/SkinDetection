@@ -11,10 +11,10 @@ import java.io.*;
 public class Main {
     public static int[][][] colourArrayNonSkin = new int[256][256][256];
     public static int[][][] colourArraySkin = new int[256][256][256];
-    public static double skin=0;
-    public static double nonSkin=0;
-    public static double[][][] probabilitySkin = new double[256][256][256];
-    public static double[][][] probabilityNonSkin = new double[256][256][256];
+//    public static double skin=0;
+//    public static double nonSkin=0;
+//    public static double[][][] probabilitySkin = new double[256][256][256];
+//    public static double[][][] probabilityNonSkin = new double[256][256][256];
 
     public static void readImage() throws IOException {
 
@@ -31,11 +31,11 @@ public class Main {
                     Color cM = new Color(imgMask.getRGB(j, i));
                     if(cM.getRed()<220 && cM.getBlue()<220 && cM.getGreen()<220){
                         colourArraySkin[c.getRed()][c.getGreen()][c.getBlue()]++;
-                        skin++;
+                        //skin++;
                     }
                     else {
                         colourArrayNonSkin[c.getRed()][c.getGreen()][c.getBlue()]++;
-                        nonSkin++;
+                        //nonSkin++;
                     }
                 }
             }
@@ -44,18 +44,18 @@ public class Main {
 
         System.out.println("reading done");
 
-        for(int i=0; i<256; i++){
-            for(int j=0; j<256; j++){
-                for(int k=0; k<256; k++){
-                    probabilitySkin[i][j][k] = colourArraySkin[i][j][k]/skin;
-                    probabilityNonSkin[i][j][k] = colourArrayNonSkin[i][j][k]/nonSkin;
+//        for(int i=0; i<256; i++){
+//            for(int j=0; j<256; j++){
+//                for(int k=0; k<256; k++){
+//                    probabilitySkin[i][j][k] = colourArraySkin[i][j][k]/skin;
+//                    probabilityNonSkin[i][j][k] = colourArrayNonSkin[i][j][k]/nonSkin;
+//
+//                    System.out.println(i + " " + j + " " +k);
+//                }
+//            }
+//        }
 
-                    System.out.println(i + " " + j + " " +k);
-                }
-            }
-        }
-
-        Probability prob = new Probability(probabilitySkin,probabilityNonSkin);
+        Probability prob = new Probability(colourArraySkin,colourArrayNonSkin);
         System.out.println("obj done");
         FileOutputStream probability = new FileOutputStream("probability.txt");
         ObjectOutputStream obj = new ObjectOutputStream(probability);
@@ -73,11 +73,11 @@ public class Main {
         ObjectInputStream input = new ObjectInputStream(new FileInputStream("probability.txt"));
         Probability inProb = (Probability) input.readObject();
         System.out.println("reading done");
-        probabilitySkin = inProb.probSkin;
-        probabilityNonSkin = inProb.probNonSkin;
+        colourArraySkin = inProb.probSkin;
+        colourArrayNonSkin = inProb.probNonSkin;
         System.out.println("assigning done");
 
-        BufferedImage SampleImage = ImageIO.read(new File("loki.jpg"));
+        BufferedImage SampleImage = ImageIO.read(new File("in5.jpg"));
         BufferedImage outputImage = new BufferedImage(SampleImage.getWidth(), SampleImage.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
 
         int width = SampleImage.getWidth();
@@ -92,13 +92,7 @@ public class Main {
             int blue = (imageInPixels[i] & 0x000000FF);
 
             // face = white
-            if ( probabilitySkin[red][green][blue]   > .15 * probabilityNonSkin[red][green][blue] ){
-                red = 250;
-                green = 250;
-                blue = 250;
-
-            }
-            else {
+            if (!(colourArraySkin[red][green][blue] > .15 * colourArrayNonSkin[red][green][blue])) {
                 red =10 ;
                 green = 10;
                 blue =10;

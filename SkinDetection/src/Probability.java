@@ -1,9 +1,9 @@
 import java.io.Serializable;
 
 public class Probability implements Serializable {
-    public double[][][] probSkin;
-    public double[][][] probNonSkin;
-    public Probability(double[][][] skin, double[][][] nonSkin){
+    public int[][][] probSkin;
+    public int[][][] probNonSkin;
+    public Probability(int[][][] skin, int[][][] nonSkin){
         probSkin = skin;
         probNonSkin = nonSkin;
     }
